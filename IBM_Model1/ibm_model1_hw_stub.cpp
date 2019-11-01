@@ -28,16 +28,18 @@ using namespace std;
 #define VO_SIZE 3
 #define D_SIZE 2
 
-
 vector<string> VS(VS_SIZE); // S vocab: VS[x] gives Src word coded by x 
 vector<string> VO(VO_SIZE); // O vocab: VO[x] gives Obs word coded by x
 
 vector<vector<int> > S(D_SIZE); // all S sequences; in this case 2
 vector<vector<int> > O(D_SIZE); // all O sequences; in this case 2
 
+vector<vector<double> > tr(VS_SIZE);
+
 // sets S[0] and S[1] to be the int vecs representing the S sequences
 // sets O[0] and O[1] to be the int vecs representing the O sequences
 void create_vocab_and_data(); 
+void init_tr();
 
 // functions which use VS and VO to 'decode' the int vecs representing the 
 // Src and Obs sequences
@@ -52,6 +54,40 @@ main() {
   // you may well though want to set up further global data structures
   // and functions which access them 
 
+  // init tr(o|s) uniformly
+  init_tr();
+  VS.push_back("NULL");
+  // repeat [E]; [M] until convergence
+
+  //  [E]
+
+  //  for o in Vo
+  //    for s in Vs U {null}
+  //      #(o, s) = 0
+  for (int i = 0; i < VO_SIZE; i++)
+    for (int j = 0; j < VS_SIZE+1; j++)
+      ;
+
+  //  for each (o, s)
+  //    for j in 1:lo
+  //      for i in 0:ls
+  //        #(o_j|s_i) += p((j, i)|o, s) 
+
+  //  [M]
+
+  //  for s in Vs U {null}
+  //    for o in Vo
+  //      tr(o|s) = #(o, s) / sum(#(o, s))
+
+}
+
+void init_tr() {
+
+  for (int i = 0; i < VS_SIZE; i++) {
+    tr[i].resize(VO_SIZE);
+    for (int j = 0; j < VO_SIZE; j++)
+      tr[i][j] = 1/VO_SIZE;
+  }
 }
 
 void create_vocab_and_data() {
