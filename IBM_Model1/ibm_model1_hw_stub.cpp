@@ -48,8 +48,10 @@ void show_pair(int d);
 void show_O(int d); 
 void show_S(int d);
 void show_tr();
+void show_counts();
 
 double prob(int j, int i, int pair);
+int ITER_COUNT = 50;
 
 main() {
 
@@ -65,12 +67,12 @@ main() {
   show_tr();
 
   // repeat [E]; [M] until convergence
-  for(int run = 0; run < 10; run ++) {
+  for(int run = 0; run < ITER_COUNT; run ++) {
     cout << "Run: " << run << endl << endl;
     //  [E]
 
     //  for o in Vo
-    //    for s in Vs U {null}
+    //    for s in Vs
     //      #(o, s) = 0
     for (int o = 0; o < VO_SIZE; o++) {
       count_os[o].resize(VS_SIZE);
@@ -78,19 +80,22 @@ main() {
         count_os[o][s] = 0;
     }
 
-    //  for each (o, s)
+    //  for each sentence pair (o, s)
     //    for j in 1:lo
     //      for i in 0:ls
     //        #(o_j, s_i) += p((j, i)|o, s)
     for (int pair = 0; pair < D_SIZE; pair++)
-      for (int j = 1; j < VO_SIZE; j++)
-        for (int i = 0; i < VS_SIZE; i++)
-          count_os[j][i] += prob(j, i, pair);
+      for (int j = 0; j < 2; j++)
+        for (int i = 0; i < 2; i++) {
+          int o = O[pair][j];
+          int s = S[pair][i];
+          count_os[o][s] += prob(j, i, pair);
+        }
 
     //  [M]
 
-    //  for s in Vs U {null}
-    //    for o in Vo
+    //  for o in Vo
+    //    for s in Vs
     //      tr(o|s) = #(o, s) / sum(#(o, s))
     for (int o = 0; o < VO_SIZE; o++)
       for(int s = 0; s < VS_SIZE; s++) {
@@ -100,24 +105,36 @@ main() {
         tr[o][s] = count_os[o][s] / sum;
       }
 
+    show_counts();
     show_tr();
   }
 }
 
 void init_tr() {
 
-  for (int o = 0; o < VO_SIZE; o++) {
+  for (int o = 0; o <  VO_SIZE; o++) {
     tr[o].resize(VS_SIZE);
     for (int s = 0; s < VS_SIZE; s++)
       tr[o][s] = 1.0 / VS_SIZE;
   }
 }
 
+void show_counts() {
+
+  cout << "UNNORMALISED COUNTS: " << endl;
+  for (int o = 0; o < VO_SIZE; o++) {
+    for(int s = 0; s < VS_SIZE; s++)
+      cout << VO[o] << " \t" << VS[s] << " \t" << count_os[o][s] << endl;
+  }
+  cout << endl;
+}
+
 void show_tr() {
 
-  for (int i = 0; i < VO_SIZE; i++) {
-    for(int j = 0; j < VS_SIZE; j++)
-      cout << VO[i] << " " << VS[j] << " " << tr[i][j] << endl;
+  cout << "PROBABILITY ESTIMATES: " << endl;
+  for (int o = 0; o < VO_SIZE; o++) {
+    for(int s = 0; s < VS_SIZE; s++)
+      cout << VO[o] << " \t" << VS[s] << " \t" << tr[o][s] << endl;
   }
   cout << endl;
 }
@@ -125,10 +142,13 @@ void show_tr() {
 double prob(int j, int i, int pair) {
 
   double sum = 0;
-  for (int i_pr = 0; i_pr < VS_SIZE; i_pr++)
-    sum += tr[ O[pair][j] ][ S[pair][i_pr] ];
-
-  return tr[ O[pair][j] ][ S[pair][i] ] / sum;
+  int o = O[pair][j];
+  int s = S[pair][i];
+  for (int i_pr = 0; i_pr < 2; i_pr++) {
+    int s_pr = S[pair][i_pr];
+    sum += tr[o][s_pr];
+  }
+  return tr[o][s] / sum;
 }
 
 void create_vocab_and_data() {
